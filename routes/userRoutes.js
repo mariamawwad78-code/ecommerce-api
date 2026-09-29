@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
-router.get('/', userController.getAllUsers);
-router.get('/:id', userController.getUserById);
-router.post('/', userController.createUser);
-router.patch('/:id/status', userController.updateUserStatus);
+// 1. Auth Routes (Public) - يجب وضعها في البداية
+router.post('/register', userController.registerUser);
+router.post('/login', userController.loginUser);
+
+// 2. Protected Routes (Logged In)
+router.get('/me', authenticateToken, userController.getCurrentUser);
+
+// 3. Admin-Only Routes
+router.get('/', authenticateToken, authorizeRoles('admin'), userController.getAllUsers);
+router.get('/:id', authenticateToken, userController.getUserById);
+router.patch('/:id/status', authenticateToken, authorizeRoles('admin'), userController.updateUserStatus);
 
 module.exports = router;
